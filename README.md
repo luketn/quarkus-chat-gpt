@@ -18,9 +18,7 @@ It's worth noting this is just one set of libraries, and you don't need any spec
 
 
 ### Call the API with cURL
-```bash
-./call-azure-api.sh
-```
+[call-azure-api.sh](call-azure-api.sh)
 
 ### Create a new project
 https://quarkus.io/guides/cli-tooling#project-creation
@@ -42,7 +40,7 @@ the Quarkus plugins.
 https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html  
 Add the extension for langchain4j azure:
 ```
-quarkus add ext quarkus-langchain4j-azure-openai 
+quarkus ext add quarkus-langchain4j-azure-openai 
 ```
 
 Configure the Azure extension in the application.properties file:
@@ -50,7 +48,7 @@ Configure the Azure extension in the application.properties file:
 quarkus.langchain4j.azure-openai.resource-name=${c3p0_resource_name:c3po-demo-01}
 quarkus.langchain4j.azure-openai.deployment-name=${c3p0_deployment_id:gpt-4}
 quarkus.langchain4j.azure-openai.api-key=${c3p0_api_key:77?????????????????}
-quarkus.langchain4j.azure-openai.timeout=30s
+quarkus.langchain4j.azure-openai.timeout=60s
 ```
 
 ### Implement a Bot
@@ -130,7 +128,7 @@ public void onOpen(Session session, @PathParam("name") String name) {
 ### Adding a Tool to Query MongoDB
 I've downloaded some data from StarWars API (an excellent source for data to play with) and imported it into a MongoDB instance. We can use the Quarkus MongoDB client to query this data.
 ```bash
-quarkus add ext mongodb-client
+quarkus ext add mongodb-client
 ```
 Create a Java class to query the MongoDB instance, which Quarkus will automatically inject into the chat context for us as a function:
 ```java
@@ -155,7 +153,11 @@ public class StarWarsDB {
 }
 ```
 
-Run a local MongoDB and import the data into it:
+Run a local MongoDB and import the data into it:  
+a. Download people.json into your current directory  
+[people.json](people.json)
+
+b. Create a docker mongo and import the data into it
 ```bash
 docker run -d --name c3p0-mongodb -p 27017:27017 -v "$(pwd)/people.json:/data/db/people.json" mongo:7
 docker exec c3p0-mongodb mongoimport --uri mongodb://localhost:27017/StarWars --collection people --file /data/db/people.json
@@ -216,8 +218,16 @@ Modify the maven pom.xml to allow the nice new preview features in Java 21:
 ```
 
 ### Nice little extra: Quarkus Dev Services MongoDB Version
-If you're testing a solution with Quarkus and MongoDB, it uses test containers to spin up a test mongo instance for you. Very convenient. You might want to control the version of MongoDB you're using, so you can do that by setting the:
+If you're testing a solution with Quarkus and MongoDB, it uses test containers to spin up a test mongo instance for you. Very convenient. You might want to control the version of MongoDB you're using and maybe the port too, so you can do that by setting the:
 ```properties
 quarkus.mongodb.devservices.image-name=mongo:7
+quarkus.mongodb.devservices.port=29017
 ```
 (solution provided by ChatGPT - https://chat.openai.com/share/3709362a-89fd-4e01-9e02-bf1c4205bb75)
+
+You can also disable the most detailed logging of the mongo driver like this:
+```properties
+quarkus.log.level=INFO
+quarkus.log.category."com.mongodb".level=WARN
+quarkus.log.category."org.mongodb".level=WARN
+```
